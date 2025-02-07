@@ -1,0 +1,185 @@
+--[[
+Deobfucated by Dino
+
+
+]]--
+
+if game:GetService("CoreGui"):FindFirstChild("CustomDisplayGUI") then
+    game:GetService("CoreGui"):FindFirstChild("CustomDisplayGUI"):Destroy()
+end
+
+local player = game.Players.LocalPlayer
+local coreGui = game:GetService("CoreGui")
+local highlightColor = Color3.fromRGB(255, 255, 0)
+local neonColor = Color3.fromRGB(0, 0, 255)
+local highlightedPlayers = {}
+local neonParts = {}
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = coreGui
+screenGui.Name = "CustomDisplayGUI"
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Parent = screenGui
+toggleButton.Size = UDim2.new(0, 80, 0, 40)
+toggleButton.Position = UDim2.new(0, 10, 0, 10)
+toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Text = "Toggle GUI"
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 12
+toggleButton.Draggable = true
+toggleButton.Active = true
+
+local mainMenu = Instance.new("Frame")
+mainMenu.Parent = screenGui
+mainMenu.Size = UDim2.new(0, 220, 0, 250)
+mainMenu.Position = UDim2.new(0.5, -110, 0.5, -125)
+mainMenu.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+mainMenu.Visible = false
+mainMenu.Draggable = true
+mainMenu.Active = true
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Parent = mainMenu
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Text = "Enter DisplayName"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 14
+
+local nameInput = Instance.new("TextBox")
+nameInput.Parent = mainMenu
+nameInput.Size = UDim2.new(0.9, 0, 0, 30)
+nameInput.Position = UDim2.new(0.05, 0, 0.3, 0)
+nameInput.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+nameInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameInput.PlaceholderText = "Enter part of name..."
+nameInput.Font = Enum.Font.Gotham
+nameInput.TextSize = 12
+
+local highlightButton = Instance.new("TextButton")
+highlightButton.Parent = mainMenu
+highlightButton.Size = UDim2.new(0.9, 0, 0, 30)
+highlightButton.Position = UDim2.new(0.05, 0, 0.55, 0)
+highlightButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+highlightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+highlightButton.Text = "Highlight"
+highlightButton.Font = Enum.Font.GothamBold
+highlightButton.TextSize = 12
+
+local removeHighlightButton = Instance.new("TextButton")
+removeHighlightButton.Parent = mainMenu
+removeHighlightButton.Size = UDim2.new(0.9, 0, 0, 30)
+removeHighlightButton.Position = UDim2.new(0.05, 0, 0.7, 0)
+removeHighlightButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+removeHighlightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+removeHighlightButton.Text = "Remove Highlight"
+removeHighlightButton.Font = Enum.Font.GothamBold
+removeHighlightButton.TextSize = 12
+
+local removeAllButton = Instance.new("TextButton")
+removeAllButton.Parent = mainMenu
+removeAllButton.Size = UDim2.new(0.9, 0, 0, 30)
+removeAllButton.Position = UDim2.new(0.05, 0, 0.85, 0)
+removeAllButton.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
+removeAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+removeAllButton.Text = "Remove All Highlights"
+removeAllButton.Font = Enum.Font.GothamBold
+removeAllButton.TextSize = 12
+
+local function toggleGUI(frame, state)
+    frame.Visible = state
+end
+
+toggleButton.MouseButton1Click:Connect(function()
+    toggleGUI(mainMenu, not mainMenu.Visible)
+end)
+
+local function highlightPlayer(name)
+    local lowerName = string.lower(name)
+    for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+        if targetPlayer.Character and not highlightedPlayers[targetPlayer] then
+            local displayName = string.lower(targetPlayer.DisplayName)
+            if string.find(displayName, lowerName) then
+                local highlight = Instance.new("Highlight")
+                highlight.Parent = targetPlayer.Character
+                highlight.FillColor = highlightColor
+                highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+                highlightedPlayers[targetPlayer] = highlight
+
+                local neonPart = Instance.new("Part")
+                neonPart.Size = Vector3.new(0.2, 0.2, 0.2)
+                neonPart.Anchored = true
+                neonPart.CanCollide = false
+                neonPart.Color = neonColor
+                neonPart.Material = Enum.Material.Neon
+                neonPart.Parent = workspace
+                neonParts[targetPlayer] = neonPart
+
+                game:GetService("RunService").RenderStepped:Connect(function()
+                    if targetPlayer.Character and highlight.Parent then
+                        local playerPos = player.Character:FindFirstChild("HumanoidRootPart").Position
+                        local targetPos = targetPlayer.Character:FindFirstChild("HumanoidRootPart").Position
+                        neonPart.Position = (playerPos + targetPos) / 2
+                        neonPart.Size = Vector3.new(0.1, 0.1, (playerPos - targetPos).magnitude)
+                        neonPart.CFrame = CFrame.new(playerPos, targetPos) * CFrame.new(0, 0, -neonPart.Size.Z / 2)
+                    else
+                        neonPart:Destroy()
+                        neonParts[targetPlayer] = nil
+                    end
+                end)
+            end
+        end
+    end
+end
+
+local function removeHighlight(name)
+    local lowerName = string.lower(name)
+    for playerObj, highlightObj in pairs(highlightedPlayers) do
+        if string.find(string.lower(playerObj.DisplayName), lowerName) then
+            highlightObj:Destroy()
+            highlightedPlayers[playerObj] = nil
+            if neonParts[playerObj] then
+                neonParts[playerObj]:Destroy()
+                neonParts[playerObj] = nil
+            end
+        end
+    end
+end
+
+local function removeAllHighlights()
+    for _, highlight in pairs(highlightedPlayers) do
+        highlight:Destroy()
+    end
+    for _, neon in pairs(neonParts) do
+        neon:Destroy()
+    end
+    highlightedPlayers = {}
+    neonParts = {}
+end
+
+highlightButton.MouseButton1Click:Connect(function()
+    local name = nameInput.Text
+    if name ~= "" then
+        highlightPlayer(name)
+    end
+end)
+
+removeHighlightButton.MouseButton1Click:Connect(function()
+    local name = nameInput.Text
+    if name ~= "" then
+        removeHighlight(name)
+    end
+end)
+
+removeAllButton.MouseButton1Click:Connect(function()
+    removeAllHighlights()
+end)
+
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Made by Amir",
+    Text = "Hola madafaka",
+    Duration = 5
+})
