@@ -1,3 +1,8 @@
+
+
+# Simple Ui
+
+```
 local gui = Instance.new("ScreenGui")
 gui.Parent = game.CoreGui
 
@@ -28,5 +33,5 @@ local UIStroke = Instance.new("UIStroke")
 UIStroke.Color = Color3.fromRGB(80, 80, 80)
 UIStroke.Thickness = 1
 UIStroke.Parent = button
-
+```
 
